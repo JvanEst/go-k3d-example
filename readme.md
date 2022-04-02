@@ -1,5 +1,10 @@
 # Go K3D example
 
+Download K3D:
+https://k3d.io/v5.4.1/
+
+## Cluster:
+
 Create a registry for the local docker images:
 ```
 k3d registry create rtk-dev-registry --port 5050
@@ -21,3 +26,8 @@ Or build and tag them correctly directly:
 docker build -f build/dev/api1/Dockerfile -t localhost:5050/api1 .
 ```
 
+## Applying config
+
+```
+kubectl apply -f <file>
+```

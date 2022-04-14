@@ -1,4 +1,8 @@
-# Go K3D example
+# K3D Go example
+
+Example of a K3D cluster with multiple namespaces and services.
+
+This example uses Kafka and Cassandra.
 
 Download K3D:
 https://k3d.io/v5.4.1/
@@ -24,43 +28,47 @@ docker push localhost:5050/api1:latest
 Or build and tag them correctly directly:
 ```
 docker build -f build/dev/api1/Dockerfile -t localhost:5050/api1 .
+docker push localhost:5050/api1:latest
 ```
 
-## Applying config
+## Kafka
 
+Apply all the files in the `k3d/kafka` directory:
 ```
-kubectl apply -f <file>
-```
-
-------------------------
-
-# Kafka
-
 kubectl apply --namespace=kafka -R -f k3d/kafka
 kubectl wait kafka/my-cluster --for=condition=Ready --timeout=300s -n kafka
-
-Test kafka:
-
-Produce
-```
-$ kubectl -n kafka run kafka-producer -ti --image=strimzi/kafka:0.17.0-kafka-2.4.0 --rm=true --restart=Never -- bin/kafka-console-producer.sh --broker-list my-cluster-kafka-bootstrap:9092 --topic my-topic
 ```
 
-Consume
+### Test if Kafka works
+
+This makes a new topic called `my-topic` and will allow you to post your own message on the topic to then read.
+
+Producer
 ```
-kubectl -n kafka run kafka-consumer -ti --image=strimzi/kafka:0.17.0-kafka-2.4.0 --rm=true --restart=Never -- bin/kafka-console-consumer.sh --bootstrap-server my-cluster-kafka-bootstrap:9092 --topic my-topic --from-beginning
+kubectl run kafka-producer -ti --image=strimzi/kafka:0.17.0-kafka-2.4.0 --rm=true --restart=Never -- bin/kafka-console-producer.sh --broker-list kafka-kafka-bootstrap.kafka.svc.cluster.local:9092 --topic my-topic
 ```
 
-# Cassandra
+Consumer
+```
+kubectl run kafka-consumer -ti --image=strimzi/kafka:0.17.0-kafka-2.4.0 --rm=true --restart=Never -- bin/kafka-console-consumer.sh --bootstrap-server kafka-kafka-bootstrap.kafka.svc.cluster.local:9092 --topic my-topic --from-beginning
+```
 
+## Cassandra
+
+Apply all the files in the `k3d/cassandra` directory:
+```
 kubectl apply --namespace=cassandra -R -f k3d/cassandra
 kubectl rollout status --watch --timeout=600s statefulset/cassandra -n cassandra
+```
 
+### Connect to cassandra to test
+```
+kubectl run cassandra-cql -ti --image=cassandra:latest --rm=true --restart=Never -- cqlsh -u cassandra -p <password> cassandra.cassandra.svc.cluster.local
+```
 
-$ kubectl run kafka-producer -ti --image=strimzi/kafka:0.17.0-kafka-2.4.0 --rm=true --restart=Never -- bin/kafka-console-producer.sh --broker-list my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092 --topic my-topic
+## Removing Kafka and/or Cassandra
+```
+kubectl delete --namespace=cassandra -R -f k3d/cassandra
 
-kubectl run kafka-consumer -ti --image=strimzi/kafka:0.17.0-kafka-2.4.0 --rm=true --restart=Never -- bin/kafka-console-consumer.sh --bootstrap-server my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092 --topic my-topic --from-beginning
-
-kubectl run cassandra-cql -ti --image=cassandra:latest --rm=true --restart=Never -- cqlsh cassandra.cassandra.svc.cluster.local
-
-TODO: New cassandra version!
+kubectl delete --namespace=kafka -R -f k3d/kafka
+```

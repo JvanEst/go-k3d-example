@@ -1,0 +1,25 @@
+---
+# Source: cassandra/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cassandra
+  namespace: cassandra
+  labels:
+    app.kubernetes.io/name: cassandra
+    helm.sh/chart: cassandra-9.1.16
+    app.kubernetes.io/instance: cassandra
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - name: cql
+      port: 9042
+      targetPort: cql
+      nodePort: null
+    - name: metrics
+      port: 8080
+      nodePort: null
+  selector:
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/instance: cassandra

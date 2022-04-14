@@ -1,0 +1,31 @@
+---
+# Source: cassandra/templates/headless-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cassandra-headless
+  namespace: cassandra
+  labels:
+    app.kubernetes.io/name: cassandra
+    helm.sh/chart: cassandra-9.1.16
+    app.kubernetes.io/instance: cassandra
+    app.kubernetes.io/managed-by: Helm
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: intra
+      port: 7000
+      targetPort: intra
+    - name: tls
+      port: 7001
+      targetPort: tls
+    - name: jmx
+      port: 7199
+      targetPort: jmx
+    - name: cql
+      port: 9042
+      targetPort: cql
+  selector:
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/instance: cassandra
